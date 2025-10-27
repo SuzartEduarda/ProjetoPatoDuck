@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pato Feynman</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: #7d84e0;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      width: 80px;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .card {
+      background: #fff;
+      color: #111;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .quiz-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .quiz-icon {
+      font-size: 4rem;
+      color: orange;
+      margin-bottom: 10px;
+    }
+
+    .quiz-card h2 {
+      margin-bottom: 10px;
+    }
+
+    .quiz-card p {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .quiz-card .buttons-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .quiz-card button {
+      background: orange;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      width: auto;
+      min-width: 180px;
+    }
+
+    .quiz-card button:hover {
+      background: darkorange;
+      transform: scale(1.05);
+    }
+
+    .language-button {
+      background: #6a71c9 !important;
+    }
+
+    .language-button:hover {
+      background: #5a61b9 !important;
+    }
+
+    .progress-card h2 {
+      margin-bottom: 15px;
+    }
+
+    .progress-bar {
+      background: #11174e;
+      border-radius: 20px;
+      height: 25px;
+      width: 100%;
+      margin-bottom: 15px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      background: orange;
+      height: 100%;
+      border-radius: 20px;
+      width: 40%;
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .progress-emoji {
+      font-size: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+
+    .duck-icons {
+      display: flex;
+      gap: 50px;
+    }
+
+    .duck-icons img {
+      width: 100%;
+    }
+
+    .footer {
+      margin-top: 30px;
+      display: flex;
+      gap: 15px;
+    }
+
+    .footer img {
+      width: 400px;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <img src="imgs/pato_principal.png" alt="Logo do Pato" class="logo">
+    <h1>Olá, eu sou Duck</h1>
+  </header>
+
+  <main class="container">
+    <!-- Card Quiz -->
+    <section class="card quiz-card">
+      <div class="quiz-icon">?</div>
+      <h2>Vamos Jogar?</h2>
+      <p>Clique abaixo para começar o jogo</p>
+      <div class="buttons-container">
+        <button id="startBtn">
+          <span>➜</span> Hora da Diversão
+        </button>
+        <button id="languageBtn" class="language-button">
+          <span>🌐</span> Idioma
+        </button>
+      </div>
+    </section>
+
+    <!-- Card Progresso -->
+    <section class="card progress-card">
+      <h2>Hora da Diversão</h2>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill">
+          <span class="progress-emoji" id="progressEmoji">😐</span>
+        </div>
+      </div>
+      <div class="duck-icons">
+        <img src="imgs/ducks.png" alt="Duck Cool">
+      </div>
+    </section>
+  </main>
+
+  <!-- Extra icons embaixo -->
+  <footer class="footer">
+    <img src="imgs/ducks_azul.png" alt="Duck Cool">
+  </footer>
+
+  <script>
+    const startBtn = document.getElementById("startBtn");
+    const languageBtn = document.getElementById("languageBtn");
+    const progressFill = document.getElementById("progressFill");
+    const progressEmoji = document.getElementById("progressEmoji");
+
+    // Emojis que mudam conforme o progresso
+    const emojis = {
+      0: "😴",   // 0% - Dormindo
+      20: "😐",  // 20% - Neutro
+      40: "🙂",  // 40% - Leve sorriso
+      60: "😊",  // 60% - Sorrindo
+      80: "😄",  // 80% - Muito feliz
+      100: "🤩"  // 100% - Estourando de felicidade
+    };
+
+    function getEmojiForProgress(progress) {
+      if (progress >= 100) return emojis[100];
+      if (progress >= 80) return emojis[80];
+      if (progress >= 60) return emojis[60];
+      if (progress >= 40) return emojis[40];
+      if (progress >= 20) return emojis[20];
+      return emojis[0];
+    }
+
+    // Hora da Diversão vai para outro_animal.html
+    startBtn.addEventListener("click", () => {
+      window.location.href = "outra_op.html";
+    });
+
+    // Botão Idioma vai para Tela_escolha.html
+    languageBtn.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+
+    // Função para animar a barra em loop
+    function animateProgressLoop() {
+      let progress = 0;
+      const interval = setInterval(() => {
+        if (progress >= 100) {
+          clearInterval(interval);
+          // Aguarda 3 segundos e recomeça
+          setTimeout(() => {
+            animateProgressLoop();
+          }, 3000);
+        } else {
+          progress += 1;
+          progressFill.style.width = progress + "%";
+          progressEmoji.textContent = getEmojiForProgress(progress);
+          
+          // Efeito de escala no emoji
+          progressEmoji.style.transform = `scale(1.2)`;
+          setTimeout(() => {
+            progressEmoji.style.transform = `scale(1)`;
+          }, 150);
+        }
+      }, 50);
+    }
+
+    // Inicia a animação em loop automaticamente
+    animateProgressLoop();
+  </script>
+</body>
+</html>

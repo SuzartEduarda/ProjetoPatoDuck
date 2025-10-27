@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz da Zebra</title>
+  <style>
+    body {
+      background: #7d84e0;
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      transition: background-color 0.3s ease;
+    }
+
+    /* Efeitos de cor sólida por 3 segundos */
+    .acerto {
+      background-color: #58c472 !important;
+      transition: background-color 0.3s ease;
+    }
+
+    .erro {
+      background-color: #e65656 !important;
+      transition: background-color 0.3s ease;
+    }
+
+    .quiz-container {
+      text-align: center;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+    }
+
+    h1 {
+      color: #045db5;
+      font-size: 1.6rem;
+      margin-bottom: 20px;
+    }
+
+    .animal-image {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 15px 0;
+    }
+
+    .animal-image img {
+      width: 150px;
+      height: auto;
+      border-radius: 12px;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .option {
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+      position: relative;
+    }
+
+    .option:hover {
+      transform: scale(1.05);
+    }
+
+    /* CORES FIXAS */
+    .option[data-resposta="Sim"] { 
+      background-color: #58c472 !important; 
+    }
+    .option[data-resposta="Não"] { 
+      background-color: #e65656 !important; 
+    }
+    .option[data-resposta="Maior"] { 
+      background-color: #8c6bdb !important; 
+    }
+    .option[data-resposta="Menor"] { 
+      background-color: #fed330 !important; 
+    }
+
+    /* Opções com imagem ocupam 100% */
+    .option-com-imagem {
+      padding: 0 !important;
+      background: transparent !important;
+      border: 2px solid #ddd;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .option-image-full {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    /* Texto sobreposto na imagem */
+    .image-text-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      color: #504f4f;
+      padding: 5px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-align: center;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+
+    /* Texto para opções sem imagem */
+    .option-text-only {
+      text-align: center;
+      font-weight: bold;
+      width: 100%;
+    }
+
+    #feedback {
+      font-weight: bold;
+      margin-top: 20px;
+      font-size: 1.2rem;
+    }
+
+    .back-button {
+      background: #7d84e0;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: 0.3s;
+      width: 100%;
+      max-width: 200px;
+    }
+
+    .back-button:hover {
+      background: #6a71c9;
+      transform: scale(1.05);
+    }
+
+    .extra-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .extra-option {
+      background: #8c6bdb;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .extra-option:hover {
+      background: #7a5ac9;
+      transform: scale(1.03);
+    }
+
+    /* Botão voltar pergunta */
+    .back-question-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: #7d84e0;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .back-question-button:hover {
+      background: #7d84e0;
+      transform: scale(1.1);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .disabled {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <!-- Botão para voltar à pergunta anterior -->
+    <button class="back-question-button hidden" id="back-question-button" onclick="voltarPerguntaAnterior()">←</button>
+    
+    <h1 id="question">Carregando...</h1>
+    <div class="animal-image">
+      <img id="animal-img" src="" alt="Animal">
+    </div>
+    <div class="options" id="options-container"></div>
+    
+    <!-- Opções extras que aparecem apenas na primeira pergunta -->
+    <div class="extra-options hidden" id="extra-options">
+      <button class="extra-option" onclick="voltarParaTelaInicial()">Voltar para Tela Inicial</button>
+      <button class="extra-option" onclick="verOutroAnimal()">Quer ver outro animal ?</button>
+    </div>
+    
+    <p id="feedback"></p>
+    
+    <!-- Botão de voltar que aparece após o quiz -->
+    <button class="back-button hidden" id="back-button" onclick="voltarParaTelaInicial()">← Voltar para Tela Inicial</button>
+  </div>
+
+  <script>
+    const perguntas = [
+      {
+        texto: "Olá! Vamos brincar?",
+        imagem: null,
+        opcoes: [
+          { texto: "Sim", imagem: null, cor: "verde" },
+          { texto: "Não", imagem: null, cor: "vermelho" }
+        ],
+        correta: "Sim",
+        primeiraPergunta: true
+      },
+      {
+        texto: "Olá! Que animal é esse?",
+        imagem: "imgs/zebra.png",
+        opcoes: [
+          { texto: "Zebra", imagem: "imgs/zebraPerfil.png", cor: "imagem" },
+          { texto: "Cavalo", imagem: "imgs/cavalo.png", cor: "imagem" },
+          { texto: "Burro", imagem: "imgs/burro.png", cor: "imagem" },
+          { texto: "Vaca", imagem: "imgs/vaca.png", cor: "imagem" }
+        ],
+        correta: "Zebra"
+      },
+      {
+        texto: "Muito bem! É uma zebra! Ela é maior ou menor do que o seu pai?",
+        imagem: "imgs/zebrapai.png",
+        opcoes: [
+          { texto: "Maior", imagem: null, cor: "roxo" },
+          { texto: "Menor", imagem: null, cor: "amarelo" }
+        ],
+        correta: "Maior"
+      },
+      {
+        texto: "Isso mesmo! A zebra é grandona! E que cor ela tem?",
+        imagem: "imgs/zebra.png",
+        opcoes: [
+          { texto: "Branca e preta", imagem: "imgs/cor_zebra.png", cor: "imagem" },
+          { texto: "Branca", imagem: "imgs/cor_branca.jpg", cor: "imagem" },
+          { texto: "Preta", imagem: "imgs/cor_preto.png", cor: "imagem" },
+          { texto: "Marrom", imagem: "imgs/cor_marrom.png", cor: "imagem" }
+        ],
+        correta: "Branca e preta"
+      },
+      {
+        texto: "Muito bem! A zebra é branca e preta, igual a um cavalinho listrado! Que legal! Adoro zebras! Quer me mostrar outro animal?",
+        imagem: "imgs/zebra.png",
+        opcoes: [
+          { texto: "Sim", imagem: null, cor: "verde" },
+          { texto: "Não", imagem: null, cor: "vermelho" }
+        ],
+        correta: "Sim",
+        respostaEspecial: true
+      }
+    ];
+
+    let indice = 0;
+    let tentativaNao = 0;
+
+    const perguntaEl = document.getElementById("question");
+    const imagemEl = document.getElementById("animal-img");
+    const opcoesContainer = document.getElementById("options-container");
+    const feedbackEl = document.getElementById("feedback");
+    const extraOptions = document.getElementById("extra-options");
+    const backButton = document.getElementById("back-button");
+    const backQuestionButton = document.getElementById("back-question-button");
+
+    // Função para mudar a cor do fundo por 3 segundos
+    function mudarCorFundo(cor) {
+      document.body.classList.add(cor);
+      
+      // Desabilita os botões durante os 3 segundos
+      const botoes = document.querySelectorAll('.option');
+      botoes.forEach(botao => {
+        botao.classList.add('disabled');
+      });
+    }
+
+    // Função para restaurar a cor original
+    function restaurarCorFundo() {
+      document.body.classList.remove('acerto', 'erro');
+      
+      // Reabilita os botões
+      const botoes = document.querySelectorAll('.option');
+      botoes.forEach(botao => {
+        botao.classList.remove('disabled');
+      });
+    }
+
+    function carregarPergunta() {
+      const atual = perguntas[indice];
+      perguntaEl.textContent = atual.texto;
+      feedbackEl.textContent = "";
+
+      // Restaura a cor original do fundo
+      restaurarCorFundo();
+
+      // Exibir imagem apenas se existir
+      if (atual.imagem) {
+        imagemEl.src = atual.imagem;
+        imagemEl.style.display = "block";
+      } else {
+        imagemEl.style.display = "none";
+      }
+
+      // Mostrar opções extras apenas na primeira pergunta
+      if (atual.primeiraPergunta) {
+        extraOptions.classList.remove("hidden");
+      } else {
+        extraOptions.classList.add("hidden");
+      }
+
+      // Mostrar botão voltar pergunta a partir da pergunta "Que animal é esse?" (índice 1)
+      if (indice >= 1) {
+        backQuestionButton.classList.remove("hidden");
+      } else {
+        backQuestionButton.classList.add("hidden");
+      }
+
+      // Esconder botão de voltar durante o quiz
+      backButton.classList.add("hidden");
+
+      // Criar botões
+      opcoesContainer.innerHTML = "";
+      atual.opcoes.forEach(opcao => {
+        const botao = document.createElement("button");
+        botao.classList.add("option");
+        botao.setAttribute("data-resposta", opcao.texto);
+        
+        if (opcao.cor === "imagem") {
+          // Opção com imagem ocupando 100% + texto sobreposto
+          botao.classList.add("option-com-imagem");
+          
+          const img = document.createElement("img");
+          img.src = opcao.imagem;
+          img.alt = opcao.texto;
+          img.classList.add("option-image-full");
+          botao.appendChild(img);
+          
+          // Adicionar texto sobreposto na imagem
+          const textoOverlay = document.createElement("div");
+          textoOverlay.classList.add("image-text-overlay");
+          textoOverlay.textContent = opcao.texto;
+          botao.appendChild(textoOverlay);
+        } else {
+          // Opção sem imagem (apenas texto)
+          const texto = document.createElement("span");
+          texto.textContent = opcao.texto;
+          texto.classList.add("option-text-only");
+          botao.appendChild(texto);
+        }
+        
+        botao.onclick = () => verificarResposta(opcao.texto);
+        opcoesContainer.appendChild(botao);
+      });
+    }
+
+    // Função para voltar à pergunta anterior
+    function voltarPerguntaAnterior() {
+      if (indice > 0) {
+        indice--;
+        carregarPergunta();
+      }
+    }
+
+    function verificarResposta(opcaoSelecionada) {
+      const atual = perguntas[indice];
+
+      // Primeira pergunta: se disser "Não", faz a lógica especial
+      if (indice === 0 && opcaoSelecionada === "Não") {
+        tentativaNao++;
+        
+        if (tentativaNao === 1) {
+          // Primeira vez dizendo "Não" - mostra mensagem e repete após 3 segundos
+          feedbackEl.textContent = "Tudo bem! Vou te dar mais uma chance... 😊";
+          feedbackEl.style.color = "#333";
+          opcoesContainer.innerHTML = "";
+          
+          setTimeout(() => {
+            feedbackEl.textContent = "";
+            carregarPergunta(); // Recarrega a mesma pergunta
+          }, 3000);
+        } else {
+          // Segunda vez dizendo "Não" - encerra definitivamente
+          feedbackEl.textContent = "Tudo bem! Podemos brincar outra hora. 😊";
+          feedbackEl.style.color = "#333";
+          opcoesContainer.innerHTML = "";
+          extraOptions.classList.add("hidden");
+          backButton.classList.remove("hidden");
+        }
+        return;
+      }
+
+      // Tratamento para "Sim" na primeira pergunta
+      if (indice === 0 && opcaoSelecionada === "Sim") {
+        mudarCorFundo('acerto'); // Fundo verde por 3 segundos
+        feedbackEl.textContent = "Heeeee! ";
+        feedbackEl.style.color = "green";
+        
+        // Espera 2s e vai pra próxima pergunta
+        setTimeout(() => {
+          indice++;
+          carregarPergunta();
+        }, 2000);
+        return;
+      }
+
+      // Tratamento especial para a pergunta da zebra
+      if (atual.respostaEspecial) {
+        if (opcaoSelecionada === "Não") {
+          feedbackEl.textContent = "Tudo bem! Podemos brincar outra hora. 😊";
+          feedbackEl.style.color = "#333";
+          opcoesContainer.innerHTML = "";
+          extraOptions.classList.add("hidden");
+          backButton.classList.remove("hidden");
+          return;
+        } else if (opcaoSelecionada === "Sim") {
+          mudarCorFundo('acerto'); // Fundo verde por 3 segundos
+          feedbackEl.textContent = " Ótimo! Vamos ver outro animal...";
+          feedbackEl.style.color = "green";
+          
+          // Espera 3s e redireciona
+          setTimeout(() => {
+            window.location.href = "outra_op.html";
+          }, 3000);
+          return;
+        }
+      } else {
+        // Lógica normal para outras perguntas
+        if (opcaoSelecionada === atual.correta) {
+          mudarCorFundo('acerto'); // Fundo verde por 2 segundos ao acertar
+          feedbackEl.textContent = " Acertou!";
+          feedbackEl.style.color = "green";
+        } else {
+          mudarCorFundo('erro'); // Fundo vermelho por 2 segundos ao errar
+          feedbackEl.textContent = " Tente novamente!";
+          feedbackEl.style.color = "red";
+          
+          // Não avança se errar, apenas espera os 2 segundos e permite tentar novamente
+          setTimeout(() => {
+            restaurarCorFundo();
+            feedbackEl.textContent = "";
+          }, 2000);
+          return; // Não avança se errar
+        }
+      }
+
+      // Espera 2s e vai pra próxima se acertar ou for resposta especial
+      setTimeout(() => {
+        indice++;
+        if (indice < perguntas.length) {
+          carregarPergunta();
+        } else {
+          perguntaEl.textContent = "Fim da brincadeira! 🦓";
+          imagemEl.style.display = "none";
+          opcoesContainer.innerHTML = "";
+          extraOptions.classList.add("hidden");
+          feedbackEl.textContent = "Você arrasou!";
+          feedbackEl.style.color = "blue";
+          backButton.classList.remove("hidden");
+          backQuestionButton.classList.add("hidden");
+        }
+      }, 2000);
+    }
+
+    function voltarParaTelaInicial() {
+      window.location.href = "Tela_Principal.html";
+    }
+
+    function verOutroAnimal() {
+      // Redireciona para uma nova página vazia
+      window.location.href = "outra_op.html";
+    }
+
+    // Iniciar o quiz
+    carregarPergunta();
+  </script>
+</body>
+</html>

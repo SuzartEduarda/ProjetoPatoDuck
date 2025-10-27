@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feynman Duck - Choose a subject</title>
+  <style>
+    /* Reset básico */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #fefdf9;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    header .logo {
+      width: 120px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 15px 0 25px;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 25px 15px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+    }
+
+    .card img {
+      width: 65px;
+      height: 65px;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      font-weight: bold;
+      font-size: 1rem;
+      color: #333;
+    }
+
+    /* Estilo para mensagem de desenvolvimento */
+    .mensagem-desenvolvimento {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: center;
+      font-weight: bold;
+      color: #856404;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    /* Botão voltar */
+    .btn-voltar {
+      background: #7d84e0;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+
+    .btn-voltar:hover {
+      background: #6a71c9;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="imgs/pato_principal.png" alt="Duck Logo" class="logo">
+  </header>
+
+  <main>
+    <h1>Choose a subject</h1>
+
+    <!-- First row: Category options -->
+    <section class="grid" id="categorias">
+      <div class="card" onclick="selecionarCategoria('animals')">
+        <img src="imgs/bichos.png" alt="Animals">
+        <p>Animals</p>
+      </div>
+
+      <div class="card" onclick="selecionarCategoria('fruits')">
+        <img src="imgs/frutas.png" alt="Fruits">
+        <p>Fruits</p>
+      </div>
+
+      <div class="card" onclick="selecionarCategoria('sounds')">
+        <img src="imgs/auto_falante.png" alt="Sounds">
+        <p>Sounds</p>
+      </div>
+    </section>
+
+    <!-- Second row: Animal options (initially hidden) -->
+    <section class="grid" id="opcoes-animais" style="display: none;">
+      <div class="card" onclick="selecionarAnimal('Giraffe')">
+        <img src="imgs/girafa_branco.jpg" alt="Giraffe">
+        <p>Giraffe</p>
+      </div>
+
+      <div class="card" onclick="selecionarAnimal('Alligator')">
+        <img src="imgs/Jacare.png" alt="Alligator">
+        <p>Alligator</p>
+      </div>
+
+      <div class="card" onclick="selecionarAnimal('Zebra')">
+        <img src="imgs/zebra.png" alt="Zebra">
+        <p>Zebra</p>
+      </div>
+    </section>
+
+    <!-- Third row: Fruit options (initially hidden) -->
+    <section class="grid" id="opcoes-frutas" style="display: none;">
+      <div class="card" onclick="selecionarFruta('Grape')">
+        <img src="imgs/uva.png" alt="Grape">
+        <p>Grape</p>
+      </div>
+
+      <div class="card" onclick="selecionarFruta('Strawberry')">
+        <img src="imgs/morango.png" alt="Strawberry">
+        <p>Strawberry</p>
+      </div>
+
+      <div class="card" onclick="selecionarFruta('Watermelon')">
+        <img src="imgs/melancia.png" alt="Watermelon">
+        <p>Watermelon</p>
+      </div>
+    </section>
+
+    <!-- Message for sounds (initially hidden) -->
+    <div class="mensagem-desenvolvimento" id="mensagem-desenvolvimento" style="display: none;">
+      🚧 Under development! This feature will be available soon.
+    </div>
+
+    <!-- Back button (initially hidden) -->
+    <button class="btn-voltar" id="btn-voltar" onclick="voltarParaCategorias()" style="display: none;">
+      ← Back
+    </button>
+  </main>
+
+  <script>
+    // Function to select category
+    function selecionarCategoria(categoria) {
+      const categorias = document.getElementById('categorias');
+      const opcoesAnimais = document.getElementById('opcoes-animais');
+      const opcoesFrutas = document.getElementById('opcoes-frutas');
+      const mensagem = document.getElementById('mensagem-desenvolvimento');
+      const btnVoltar = document.getElementById('btn-voltar');
+
+      // Hide all sections first
+      categorias.style.display = 'none';
+      opcoesAnimais.style.display = 'none';
+      opcoesFrutas.style.display = 'none';
+      mensagem.style.display = 'none';
+      btnVoltar.style.display = 'block';
+
+      if (categoria === 'animals') {
+        // Show animal options
+        opcoesAnimais.style.display = 'grid';
+      } else if (categoria === 'fruits') {
+        // Show fruit options
+        opcoesFrutas.style.display = 'grid';
+      } else if (categoria === 'sounds') {
+        // For sounds, show development message
+        mensagem.style.display = 'block';
+        
+        // Optional: after 3 seconds, return to categories
+        setTimeout(() => {
+          voltarParaCategorias();
+        }, 3000);
+      }
+    }
+
+    // Function to select specific animal
+    function selecionarAnimal(animal) {
+      if (animal === 'Giraffe') {
+        window.location.href = 'in_giraffe.html';
+      } else if (animal === 'Alligator') {
+        window.location.href = 'in_jacare.html';
+      } else if (animal === 'Zebra') {
+        window.location.href = 'in_zebra.html';
+      }
+    }
+
+    // Function to select specific fruit
+    function selecionarFruta(fruta) {
+      if (fruta === 'Grape') {
+        window.location.href = 'in_uva.html';
+      } else if (fruta === 'Strawberry') {
+        window.location.href = 'in_morango.html';
+      } else if (fruta === 'Watermelon') {
+        window.location.href = 'in_melancia.html';
+      }
+    }
+
+    // Function to return to categories
+    function voltarParaCategorias() {
+      const categorias = document.getElementById('categorias');
+      const opcoesAnimais = document.getElementById('opcoes-animais');
+      const opcoesFrutas = document.getElementById('opcoes-frutas');
+      const mensagem = document.getElementById('mensagem-desenvolvimento');
+      const btnVoltar = document.getElementById('btn-voltar');
+      
+      categorias.style.display = 'grid';
+      opcoesAnimais.style.display = 'none';
+      opcoesFrutas.style.display = 'none';
+      mensagem.style.display = 'none';
+      btnVoltar.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

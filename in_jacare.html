@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crocodile Quiz</title>
+<style>
+body {
+  background: #7d84e0;
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  transition: background-color 0.3s ease;
+}
+.correct { background-color: #58c472 !important; transition: background-color 0.3s ease; }
+.wrong { background-color: #e65656 !important; transition: background-color 0.3s ease; }
+
+.quiz-container {
+  text-align: center;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+}
+h1 { color: #045db5; font-size: 1.6rem; margin-bottom: 20px; }
+
+.animal-image { display: flex; justify-content: center; align-items: center; margin: 15px 0; }
+.animal-image img { width: 150px; height: auto; border-radius: 12px; }
+
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+
+.option {
+  border: none; border-radius: 12px; padding: 15px; font-size: 1rem; font-weight: bold;
+  color: white; cursor: pointer; transition: 0.3s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 80px; position: relative;
+}
+.option:hover { transform: scale(1.05); }
+.option[data-answer="Yes"] { background-color: #58c472 !important; }
+.option[data-answer="No"] { background-color: #e65656 !important; }
+.option[data-answer="Bigger"] { background-color: #8c6bdb !important; }
+.option[data-answer="Smaller"] { background-color: #fed330 !important; }
+.option[data-answer="Green"] { background-color: #58c472 !important; }
+
+.option-with-image { padding: 0 !important; background: transparent !important; border: 2px solid #ddd; overflow: hidden; }
+.option-image-full { width: 100%; height: 80px; object-fit: cover; border-radius: 10px; }
+.image-text-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  color: green; padding: 5px; font-size: 0.8rem; font-weight: bold; text-align: center;
+}
+.option-text-only { text-align: center; font-weight: bold; width: 100%; }
+
+#feedback { font-weight: bold; margin-top: 20px; font-size: 1.2rem; }
+
+.back-button {
+  background: #7d84e0; color: white; border: none; padding: 12px 24px;
+  border-radius: 30px; font-weight: bold; cursor: pointer;
+  margin-top: 15px; transition: 0.3s; width: 100%; max-width: 200px;
+}
+.back-button:hover { background: #6a71c9; transform: scale(1.05); }
+
+.extra-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+.extra-option {
+  background: #8c6bdb; color: white; border: none; border-radius: 12px;
+  padding: 12px; font-size: 0.9rem; cursor: pointer; transition: 0.3s;
+}
+.extra-option:hover { background: #7a5ac9; transform: scale(1.03); }
+
+.back-question-button {
+  position: absolute; top: 20px; left: 20px; background: #7d84e0; color: white;
+  border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.back-question-button:hover { transform: scale(1.1); }
+
+.hidden { display: none; }
+.disabled { pointer-events: none; opacity: 0.6; }
+</style>
+</head>
+<body>
+<div class="quiz-container">
+  <button class="back-question-button hidden" id="back-question-button" onclick="goBackQuestion()">←</button>
+  <h1 id="question">Loading...</h1>
+  <div class="animal-image"><img id="animal-img" src="" alt="Animal"></div>
+  <div class="options" id="options-container"></div>
+
+  <div class="extra-options hidden" id="extra-options">
+    <button class="extra-option" onclick="goToHome()">Go to Home Screen</button>
+    <button class="extra-option" onclick="seeAnotherAnimal()">Do you want to see another animal?</button>
+  </div>
+
+  <p id="feedback"></p>
+  <button class="back-button hidden" id="back-button" onclick="goToHome()">← Go to Home Screen</button>
+</div>
+
+<script>
+const questions = [
+  {
+    text: "Hi! Shall we play a guessing game?",
+    image: null,
+    options: [{ text: "Yes" }, { text: "No" }],
+    correct: "Yes",
+    firstQuestion: true,
+    acceptAnyAnswer: true
+  },
+  {
+    text: "What animal is this?",
+    image: "imgs/Jacare.png",
+    options: [
+      { text: "Crocodile", image: "imgs/JacarePerfil.png", color: "image" },
+      { text: "T-rex", image: "imgs/t-rex.png", color: "image" },
+      { text: "Lizard", image: "imgs/Lagartixa.png", color: "image" },
+      { text: "Turtle", image: "imgs/Tartaruga.png", color: "image" }
+    ],
+    correct: "Crocodile", checkKeyword: true, keywords: ["crocodile", "alligator"]
+  },
+  {
+    text: "Very good! It's a Crocodile! Is it bigger or smaller than an ant?",
+    image: "imgs/Jacamiga.png",
+    options: [{ text: "Bigger" }, { text: "Smaller" }],
+    correct: "Bigger", checkKeyword: true, keywords: ["bigger", "big", "large"]
+  },
+  {
+    text: "That's right! The crocodile is much bigger than an ant! What color is it?",
+    image: "imgs/Jacare.png",
+    options: [
+      { text: "Green", image: "imgs/cor_verde.jpg", color: "image" },
+      { text: "Brown", image: "imgs/cor_marrom.png", color: "image" },
+      { text: "Gray", image: "imgs/cor_cinza.jpg", color: "image" },
+      { text: "Black", image: "imgs/cor_preto.png", color: "image" }
+    ],
+    correct: "Green", checkKeyword: true, keywords: ["green"]
+  },
+  {
+    text: "How cool! I love crocodiles! Do you want to show me another animal?",
+    image: "imgs/Jacare.png",
+    options: [{ text: "Yes" }, { text: "No" }],
+    correct: "Yes",
+    specialAnswer: true
+  }
+];
+
+let index = 0;
+let noAttempt = 0;
+
+const questionEl = document.getElementById("question");
+const imageEl = document.getElementById("animal-img");
+const optionsContainer = document.getElementById("options-container");
+const feedbackEl = document.getElementById("feedback");
+const extraOptions = document.getElementById("extra-options");
+const backButton = document.getElementById("back-button");
+const backQuestionButton = document.getElementById("back-question-button");
+
+function changeBackground(color) {
+  document.body.classList.add(color);
+  document.querySelectorAll('.option').forEach(btn => btn.classList.add('disabled'));
+}
+
+function restoreBackground() {
+  document.body.classList.remove('correct', 'wrong');
+  document.querySelectorAll('.option').forEach(btn => btn.classList.remove('disabled'));
+}
+
+function checkKeyword(answer, keywords) {
+  const lower = answer.toLowerCase();
+  return keywords.some(word => lower.includes(word.toLowerCase()));
+}
+
+function loadQuestion() {
+  const current = questions[index];
+  questionEl.textContent = current.text;
+  feedbackEl.textContent = "";
+  restoreBackground();
+
+  if (current.image) { imageEl.src = current.image; imageEl.style.display = "block"; }
+  else { imageEl.style.display = "none"; }
+
+  if (current.firstQuestion) extraOptions.classList.remove("hidden");
+  else extraOptions.classList.add("hidden");
+
+  if (index >= 1) backQuestionButton.classList.remove("hidden");
+  else backQuestionButton.classList.add("hidden");
+
+  backButton.classList.add("hidden");
+  optionsContainer.innerHTML = "";
+
+  current.options.forEach(option => {
+    const btn = document.createElement("button");
+    btn.classList.add("option");
+    btn.setAttribute("data-answer", option.text);
+    if (option.color === "image") {
+      btn.classList.add("option-with-image");
+      const img = document.createElement("img");
+      img.src = option.image;
+      img.classList.add("option-image-full");
+      btn.appendChild(img);
+      const overlay = document.createElement("div");
+      overlay.classList.add("image-text-overlay");
+      overlay.textContent = option.text;
+      btn.appendChild(overlay);
+    } else {
+      const span = document.createElement("span");
+      span.textContent = option.text;
+      span.classList.add("option-text-only");
+      btn.appendChild(span);
+    }
+    btn.onclick = () => checkAnswer(option.text);
+    optionsContainer.appendChild(btn);
+  });
+}
+
+function goBackQuestion() {
+  if (index > 0) { index--; loadQuestion(); }
+}
+
+function checkAnswer(selected) {
+  const current = questions[index];
+
+  if (index === 0 && selected === "No") {
+    noAttempt++;
+    if (noAttempt === 1) {
+      feedbackEl.textContent = "Alright! I'll give you another chance... 😊";
+      optionsContainer.innerHTML = "";
+      setTimeout(() => { feedbackEl.textContent = ""; loadQuestion(); }, 3000);
+    } else {
+      feedbackEl.textContent = "No problem! We can play another time. 😊";
+      optionsContainer.innerHTML = "";
+      extraOptions.classList.add("hidden");
+      backButton.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (index === 0 && current.acceptAnyAnswer) {
+    changeBackground('correct');
+    feedbackEl.textContent = "Great! Let's start! ";
+    setTimeout(() => { index++; loadQuestion(); }, 2000);
+    return;
+  }
+
+  if (current.checkKeyword) {
+    const correct = checkKeyword(selected, current.keywords);
+    if (!correct) {
+      changeBackground('wrong');
+      feedbackEl.textContent = " Try again!";
+      setTimeout(() => { restoreBackground(); feedbackEl.textContent = ""; }, 2000);
+      return;
+    }
+    changeBackground('correct');
+    feedbackEl.textContent = " Well done!";
+  }
+
+  if (current.specialAnswer) {
+    if (selected === "No") {
+      window.location.href = "in_Tela_Principal.html";
+      return;
+    } else if (selected === "Yes") {
+      changeBackground('correct');
+      feedbackEl.textContent = " Awesome! Let's see another animal...";
+      setTimeout(() => { window.location.href = "other_op.html"; }, 3000);
+      return;
+    }
+  }
+
+  setTimeout(() => {
+    index++;
+    if (index < questions.length) loadQuestion();
+    else {
+      questionEl.textContent = "End of the game!";
+      imageEl.style.display = "none";
+      optionsContainer.innerHTML = "";
+      feedbackEl.textContent = "You rocked it!";
+      backButton.classList.remove("hidden");
+      backQuestionButton.classList.add("hidden");
+    }
+  }, 2000);
+}
+
+function goToHome() {
+  window.location.href = "in_Tela_Principal.html";
+}
+function seeAnotherAnimal() {
+  window.location.href = "in_outra_op.html";
+}
+
+loadQuestion();
+</script>
+</body>
+</html>

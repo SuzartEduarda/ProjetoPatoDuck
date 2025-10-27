@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz da Uva</title>
+  <style>
+    body {
+      background: #7d84e0;
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      transition: background-color 0.3s ease;
+    }
+
+    .correct {
+      background-color: #58c472 !important;
+    }
+
+    .error {
+      background-color: #e65656 !important;
+    }
+
+    .quiz-container {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+    }
+
+    .question-image {
+      width: 100px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+
+    h1 {
+      color: #045db5;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+
+    .option {
+      border: none;
+      border-radius: 12px;
+      padding: 0;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 0;
+      transition: 0.3s;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      height: 80px;
+    }
+
+    .option img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .option span {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      color: violet;
+      font-weight: bold;
+      padding: 5px;
+      font-size: 0.9rem;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+
+    .option-sem-imagem {
+      background: #f0f0f0;
+      border: 2px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 60px;
+    }
+
+    .option-sem-imagem span {
+      position: static;
+      background: none;
+      color: #333;
+      font-size: 1rem;
+      padding: 0;
+    }
+
+    /* NOVO ESTILO: Container para botões lado a lado */
+    .opcoes-lado-a-lado {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .opcoes-lado-a-lado .option-sem-imagem {
+      width: 150px;
+      height: 60px;
+      flex: 1;
+    }
+
+    /* ESTILO PARA OPÇÕES EM COLUNA - ADICIONADO */
+    .opcoes-coluna {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    #feedback {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #333;
+    }
+
+    .back-question-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: #7d84e0;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .back-question-button:hover {
+      background: #6a71c9;
+      transform: scale(1.1);
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <button class="back-question-button hidden" id="back-question-button" onclick="voltarPerguntaAnterior()">←</button>
+    
+    <h1 id="pergunta"></h1>
+    
+    <img id="question-image" class="question-image" src="" alt="Imagem da pergunta">
+    
+    <div id="opcoes"></div>
+    <p id="feedback"></p>
+  </div>
+
+  <script>
+    let etapa = 0;
+    let historicoPerguntas = [];
+
+    function voltarPerguntaAnterior() {
+      if (historicoPerguntas.length > 0) {
+        etapa = historicoPerguntas.pop();
+        carregarPergunta(etapa);
+      }
+    }
+
+    function carregarPergunta(numeroEtapa) {
+      const pergunta = document.getElementById("pergunta");
+      const opcoes = document.getElementById("opcoes");
+      const feedback = document.getElementById("feedback");
+      const imagem = document.getElementById("question-image");
+      const backButton = document.getElementById("back-question-button");
+
+      feedback.textContent = "";
+      document.body.classList.remove("correct", "error");
+
+      if (numeroEtapa >= 1) {
+        backButton.classList.remove("hidden");
+      } else {
+        backButton.classList.add("hidden");
+      }
+
+      switch(numeroEtapa) {
+        case 0:
+          pergunta.textContent = "Que cor a uva tem?";
+          imagem.src = "imgs/uva.png";
+          opcoes.innerHTML = `
+            <button class="option" onclick="responder('roxa')">
+              <img src="imgs/cor_roxo.png" alt="Roxa">
+              <span>Roxa </span>
+            </button>
+            <button class="option" onclick="responder('verde')">
+              <img src="imgs/cor_verde.jpg" alt="Verde">
+              <span>Verde </span>
+            </button>
+            <button class="option" onclick="responder('vermelha')">
+              <img src="imgs/cor_vemelho.png" alt="Vermelha">
+              <span>Vermelha </span>
+            </button>
+          `;
+          break;
+
+        case 1:
+          pergunta.textContent = "Agora me diz: a uva é maior ou menor que a sua mão?";
+          imagem.src = "imgs/criança_uva.png";
+          // ALTERAÇÃO: Botões sem imagem e lado a lado
+          opcoes.innerHTML = `
+            <div class="opcoes-lado-a-lado">
+              <button class="option-sem-imagem" onclick="responder('menor')">
+                <span>Menor</span>
+              </button>
+              <button class="option-sem-imagem" onclick="responder('maior')">
+                <span>Maior</span>
+              </button>
+            </div>
+          `;
+          break;
+
+        case 2:
+          pergunta.textContent = "E sabe qual é a primeira letra da palavra \"uva\"?";
+          imagem.src = "imgs/uva.png";
+          opcoes.innerHTML = `
+            <button class="option option-sem-imagem" onclick="responder('U')">
+              <span>Letra U</span>
+            </button>
+            <button class="option option-sem-imagem" onclick="responder('A')">
+              <span>Letra A</span>
+            </button>
+            <button class="option option-sem-imagem" onclick="responder('M')">
+              <span>Letra M</span>
+            </button>
+          `;
+          break;
+
+        case 3:
+          pergunta.textContent = "Muito bem! Quer me mostrar outra fruta?";
+          imagem.src = "imgs/uva.png";
+          opcoes.innerHTML = `
+            <div class="opcoes-coluna">
+              <button class="option-sem-imagem" onclick="responder('outra_opção')">
+                <span>Quero mostrar outra fruta 🍓</span>
+              </button>
+              <button class="option-sem-imagem" onclick="responder('tela_principal')">
+                <span>Não quero mostrar frutas </span>
+              </button>
+            </div>
+          `;
+          break;
+      }
+    }
+
+    function responder(resposta) {
+      historicoPerguntas.push(etapa);
+
+      const feedback = document.getElementById("feedback");
+      document.body.classList.remove("correct", "error");
+
+      if (etapa === 0) {
+        if (resposta === "roxa" || resposta === "verde") {
+          document.body.classList.add("correct");
+          feedback.textContent = resposta === "roxa" ? "Correto! Uvas podem ser roxas! " : "Correto! Uvas podem ser verdes! ";
+          etapa++;
+          setTimeout(() => carregarPergunta(etapa), 2000);
+        } else {
+          document.body.classList.add("error");
+          feedback.textContent = "Tente novamente!";
+          historicoPerguntas.pop();
+        }
+      } else if (etapa === 1) {
+        if (resposta === "menor") {
+          document.body.classList.add("correct");
+          feedback.textContent = "Isso mesmo! A uva é menor que a mão!";
+          etapa++;
+          setTimeout(() => carregarPergunta(etapa), 2000);
+        } else {
+          document.body.classList.add("error");
+          feedback.textContent = "Não é maior!";
+          historicoPerguntas.pop();
+        }
+      } else if (etapa === 2) {
+        if (resposta === "U") {
+          document.body.classList.add("correct");
+          feedback.textContent = "Perfeito! U de Uva!";
+          etapa++;
+          setTimeout(() => carregarPergunta(etapa), 2000);
+        } else {
+          document.body.classList.add("error");
+          feedback.textContent = "Tente outra letra!";
+          historicoPerguntas.pop();
+        }
+      } else if (etapa === 3) {
+        // CORREÇÃO: Direcionamento igual às outras telas
+        if (resposta === "outra_opção") {
+          setTimeout(() => {
+            window.location.href = "outra_op.html"; // Altere a URL se necessário
+          }, 500);
+        } else if (resposta === "tela_principal") {
+          setTimeout(() => {
+            window.location.href = "Tela_Principal.html"; // Altere a URL se necessário
+          }, 500);
+        }
+      }
+
+      setTimeout(() => {
+        document.body.classList.remove("correct", "error");
+      }, 2000);
+    }
+
+    // Inicializa a primeira pergunta
+    carregarPergunta(etapa);
+  </script>
+</body>
+</html>

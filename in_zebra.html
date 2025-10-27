@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zebra Quiz</title>
+  <style>
+    body {
+      background: #7d84e0;
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      transition: background-color 0.3s ease;
+    }
+
+    /* Solid color effects for 3 seconds */
+    .correct {
+      background-color: #58c472 !important;
+      transition: background-color 0.3s ease;
+    }
+
+    .error {
+      background-color: #e65656 !important;
+      transition: background-color 0.3s ease;
+    }
+
+    .quiz-container {
+      text-align: center;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+    }
+
+    h1 {
+      color: #045db5;
+      font-size: 1.6rem;
+      margin-bottom: 20px;
+    }
+
+    .animal-image {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 15px 0;
+    }
+
+    .animal-image img {
+      width: 150px;
+      height: auto;
+      border-radius: 12px;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .option {
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+      position: relative;
+    }
+
+    .option:hover {
+      transform: scale(1.05);
+    }
+
+    /* FIXED COLORS */
+    .option[data-answer="Yes"] { 
+      background-color: #58c472 !important; 
+    }
+    .option[data-answer="No"] { 
+      background-color: #e65656 !important; 
+    }
+    .option[data-answer="Bigger"] { 
+      background-color: #8c6bdb !important; 
+    }
+    .option[data-answer="Smaller"] { 
+      background-color: #fed330 !important; 
+    }
+
+    /* Image options take up 100% */
+    .option-with-image {
+      padding: 0 !important;
+      background: transparent !important;
+      border: 2px solid #ddd;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .option-image-full {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    /* Text overlay on image */
+    .image-text-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      color: #504f4f;
+      padding: 5px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-align: center;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+
+    /* Text for options without images */
+    .option-text-only {
+      text-align: center;
+      font-weight: bold;
+      width: 100%;
+    }
+
+    #feedback {
+      font-weight: bold;
+      margin-top: 20px;
+      font-size: 1.2rem;
+    }
+
+    .back-button {
+      background: #7d84e0;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: 0.3s;
+      width: 100%;
+      max-width: 200px;
+    }
+
+    .back-button:hover {
+      background: #6a71c9;
+      transform: scale(1.05);
+    }
+
+    .extra-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .extra-option {
+      background: #8c6bdb;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .extra-option:hover {
+      background: #7a5ac9;
+      transform: scale(1.03);
+    }
+
+    /* Back to previous question button */
+    .back-question-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: #7d84e0;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .back-question-button:hover {
+      background: #7d84e0;
+      transform: scale(1.1);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .disabled {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <!-- Button to go back to previous question -->
+    <button class="back-question-button hidden" id="back-question-button" onclick="goToPreviousQuestion()">←</button>
+    
+    <h1 id="question">Loading...</h1>
+    <div class="animal-image">
+      <img id="animal-img" src="" alt="Animal">
+    </div>
+    <div class="options" id="options-container"></div>
+    
+    <!-- Extra options that appear only in the first question -->
+    <div class="extra-options hidden" id="extra-options">
+      <button class="extra-option" onclick="goToHomeScreen()">Back to Home Screen</button>
+      <button class="extra-option" onclick="seeAnotherAnimal()">Want to see another animal?</button>
+    </div>
+    
+    <p id="feedback"></p>
+    
+    <!-- Back button that appears after the quiz -->
+    <button class="back-button hidden" id="back-button" onclick="goToHomeScreen()">← Back to Home Screen</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        text: "Hello! Shall we play?",
+        image: null,
+        options: [
+          { text: "Yes", image: null, color: "green" },
+          { text: "No", image: null, color: "red" }
+        ],
+        correct: "Yes",
+        firstQuestion: true
+      },
+      {
+        text: "Hello! What animal is this?",
+        image: "imgs/zebra.png",
+        options: [
+          { text: "Zebra", image: "imgs/zebraPerfil.png", color: "image" },
+          { text: "Horse", image: "imgs/cavalo.png", color: "image" },
+          { text: "Donkey", image: "imgs/burro.png", color: "image" },
+          { text: "Cow", image: "imgs/vaca.png", color: "image" }
+        ],
+        correct: "Zebra"
+      },
+      {
+        text: "Great job! It's a zebra! Is it bigger or smaller than your dad?",
+        image: "imgs/zebrapai.png",
+        options: [
+          { text: "Bigger", image: null, color: "purple" },
+          { text: "Smaller", image: null, color: "yellow" }
+        ],
+        correct: "Bigger"
+      },
+      {
+        text: "That's right! The zebra is really big! And what color is it?",
+        image: "imgs/zebra.png",
+        options: [
+          { text: "Black and white", image: "imgs/cor_zebra.png", color: "image" },
+          { text: "White", image: "imgs/cor_branca.jpg", color: "image" },
+          { text: "Black", image: "imgs/cor_preto.png", color: "image" },
+          { text: "Brown", image: "imgs/cor_marrom.png", color: "image" }
+        ],
+        correct: "Black and white"
+      },
+      {
+        text: "Very good! The zebra is black and white, like a stripy horse! How cool! I love zebras! Do you want to show me another animal?",
+        image: "imgs/zebra.png",
+        options: [
+          { text: "Yes", image: null, color: "green" },
+          { text: "No", image: null, color: "red" }
+        ],
+        correct: "Yes",
+        specialAnswer: true
+      }
+    ];
+
+    let index = 0;
+    let noAttempts = 0;
+
+    const questionEl = document.getElementById("question");
+    const imageEl = document.getElementById("animal-img");
+    const optionsContainer = document.getElementById("options-container");
+    const feedbackEl = document.getElementById("feedback");
+    const extraOptions = document.getElementById("extra-options");
+    const backButton = document.getElementById("back-button");
+    const backQuestionButton = document.getElementById("back-question-button");
+
+    // Function to change background color for 3 seconds
+    function changeBackgroundColor(color) {
+      document.body.classList.add(color);
+      
+      // Disables buttons during the 3 seconds
+      const buttons = document.querySelectorAll('.option');
+      buttons.forEach(button => {
+        button.classList.add('disabled');
+      });
+    }
+
+    // Function to restore original background color
+    function restoreBackgroundColor() {
+      document.body.classList.remove('correct', 'error');
+      
+      // Re-enables buttons
+      const buttons = document.querySelectorAll('.option');
+      buttons.forEach(button => {
+        button.classList.remove('disabled');
+      });
+    }
+
+    function loadQuestion() {
+      const current = questions[index];
+      questionEl.textContent = current.text;
+      feedbackEl.textContent = "";
+
+      // Restore original background color
+      restoreBackgroundColor();
+
+      // Show image only if it exists
+      if (current.image) {
+        imageEl.src = current.image;
+        imageEl.style.display = "block";
+      } else {
+        imageEl.style.display = "none";
+      }
+
+      // Show extra options only in the first question
+      if (current.firstQuestion) {
+        extraOptions.classList.remove("hidden");
+      } else {
+        extraOptions.classList.add("hidden");
+      }
+
+      // Show back question button starting from "What animal is this?" question (index 1)
+      if (index >= 1) {
+        backQuestionButton.classList.remove("hidden");
+      } else {
+        backQuestionButton.classList.add("hidden");
+      }
+
+      // Hide back button during the quiz
+      backButton.classList.add("hidden");
+
+      // Create buttons
+      optionsContainer.innerHTML = "";
+      current.options.forEach(option => {
+        const button = document.createElement("button");
+        button.classList.add("option");
+        button.setAttribute("data-answer", option.text);
+        
+        if (option.color === "image") {
+          // Option with image taking up 100% + text overlay
+          button.classList.add("option-with-image");
+          
+          const img = document.createElement("img");
+          img.src = option.image;
+          img.alt = option.text;
+          img.classList.add("option-image-full");
+          button.appendChild(img);
+          
+          // Add text overlay on image
+          const textOverlay = document.createElement("div");
+          textOverlay.classList.add("image-text-overlay");
+          textOverlay.textContent = option.text;
+          button.appendChild(textOverlay);
+        } else {
+          // Option without image (text only)
+          const text = document.createElement("span");
+          text.textContent = option.text;
+          text.classList.add("option-text-only");
+          button.appendChild(text);
+        }
+        
+        button.onclick = () => checkAnswer(option.text);
+        optionsContainer.appendChild(button);
+      });
+    }
+
+    // Function to go back to previous question
+    function goToPreviousQuestion() {
+      if (index > 0) {
+        index--;
+        loadQuestion();
+      }
+    }
+
+    function checkAnswer(selectedOption) {
+      const current = questions[index];
+
+      // First question: if saying "No", do special logic
+      if (index === 0 && selectedOption === "No") {
+        noAttempts++;
+        
+        if (noAttempts === 1) {
+          // First time saying "No" - show message and repeat after 3 seconds
+          feedbackEl.textContent = "That's okay! I'll give you another chance... 😊";
+          feedbackEl.style.color = "#333";
+          optionsContainer.innerHTML = "";
+          
+          setTimeout(() => {
+            feedbackEl.textContent = "";
+            loadQuestion(); // Reloads the same question
+          }, 3000);
+        } else {
+          // Second time saying "No" - ends definitively
+          feedbackEl.textContent = "That's okay! We can play another time. 😊";
+          feedbackEl.style.color = "#333";
+          optionsContainer.innerHTML = "";
+          extraOptions.classList.add("hidden");
+          backButton.classList.remove("hidden");
+        }
+        return;
+      }
+
+      // Treatment for "Yes" in the first question
+      if (index === 0 && selectedOption === "Yes") {
+        changeBackgroundColor('correct'); // Green background for 3 seconds
+        feedbackEl.textContent = "Yay! ";
+        feedbackEl.style.color = "green";
+        
+        // Wait 2s and go to next question
+        setTimeout(() => {
+          index++;
+          loadQuestion();
+        }, 2000);
+        return;
+      }
+
+      // Special treatment for the zebra question
+      if (current.specialAnswer) {
+        if (selectedOption === "No") {
+          feedbackEl.textContent = "That's okay! We can play another time. 😊";
+          feedbackEl.style.color = "#333";
+          optionsContainer.innerHTML = "";
+          extraOptions.classList.add("hidden");
+          backButton.classList.remove("hidden");
+          return;
+        } else if (selectedOption === "Yes") {
+          changeBackgroundColor('correct'); // Green background for 3 seconds
+          feedbackEl.textContent = " Great! Let's see another animal...";
+          feedbackEl.style.color = "green";
+          
+          // Wait 3s and redirect
+          setTimeout(() => {
+            window.location.href = "in_outra_op.html";
+          }, 3000);
+          return;
+        }
+      } else {
+        // Normal logic for other questions
+        if (selectedOption === current.correct) {
+          changeBackgroundColor('correct'); // Green background for 2 seconds when correct
+          feedbackEl.textContent = " Correct!";
+          feedbackEl.style.color = "green";
+        } else {
+          changeBackgroundColor('error'); // Red background for 2 seconds when wrong
+          feedbackEl.textContent = " Try again!";
+          feedbackEl.style.color = "red";
+          
+          // Don't advance if wrong, just wait 2 seconds and allow trying again
+          setTimeout(() => {
+            restoreBackgroundColor();
+            feedbackEl.textContent = "";
+          }, 2000);
+          return; // Don't advance if wrong
+        }
+      }
+      // Wait 2s and go to next if correct or special answer
+      setTimeout(() => {
+        index++;
+        if (index < questions.length) {
+          loadQuestion();
+        } else {
+          questionEl.textContent = "End of the game! ";
+          imageEl.style.display = "none";
+          optionsContainer.innerHTML = "";
+          extraOptions.classList.add("hidden");
+          feedbackEl.textContent = "You did great!";
+          feedbackEl.style.color = "blue";
+          backButton.classList.remove("hidden");
+          backQuestionButton.classList.add("hidden");
+        }
+      }, 2000);
+    }
+
+    function goToHomeScreen() {
+      window.location.href = "in_Tela_Principal.html";
+    }
+
+    function seeAnotherAnimal() {
+      // Redirects to a new empty page
+      window.location.href = "in_outra_op.html";
+    }
+
+    // Start the quiz
+    loadQuestion();
+  </script>
+</body>
+</html>

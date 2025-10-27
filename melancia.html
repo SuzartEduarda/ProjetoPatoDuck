@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz da Melancia</title>
+  <style>
+    body {
+      background: #7d84e0;
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      transition: background-color 0.3s ease;
+    }
+
+    .correct {
+      background-color: #58c472 !important;
+    }
+
+    .error {
+      background-color: #e65656 !important;
+    }
+
+    .quiz-container {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+    }
+
+    .question-image {
+      width: 200px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      color: #045db5;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+
+    .option {
+      border: none;
+      border-radius: 12px;
+      padding: 0;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 0;
+      transition: 0.3s;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      height: 80px;
+    }
+
+    .option img {
+      width: 130px;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .option span {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255,255,255,0.8);
+      color: #333;
+      font-weight: bold;
+      padding: 5px;
+      font-size: 0.9rem;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+
+    .option-sem-imagem {
+      background: #f0f0f0;
+      border: 2px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 60px;
+      margin: 8px 0;
+    }
+
+    .option-sem-imagem span {
+      position: static;
+      background: none;
+      color: #333;
+      font-size: 1rem;
+      padding: 0;
+    }
+
+    .opcoes-lado-a-lado {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .opcoes-lado-a-lado .option-sem-imagem {
+      width: 150px;
+      height: 60px;
+      flex: 1;
+    }
+
+    .opcoes-coluna {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    #feedback {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #333;
+    }
+
+    .back-question-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: #7d84e0;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .back-question-button:hover {
+      background: #6a71c9;
+      transform: scale(1.1);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .disabled {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <button class="back-question-button hidden" id="back-question-button" onclick="voltarPerguntaAnterior()">←</button>
+    
+    <h1 id="pergunta"></h1>
+    
+    <img id="question-image" class="question-image" src="" alt="Imagem da pergunta">
+    
+    <div id="opcoes"></div>
+    <p id="feedback"></p>
+  </div>
+
+  <script>
+    let etapa = 0;
+    let historicoPerguntas = [];
+
+    function voltarPerguntaAnterior() {
+      if (historicoPerguntas.length > 0) {
+        etapa = historicoPerguntas.pop();
+        carregarPergunta(etapa);
+      }
+    }
+
+    function carregarPergunta(numeroEtapa) {
+      const pergunta = document.getElementById("pergunta");
+      const opcoes = document.getElementById("opcoes");
+      const feedback = document.getElementById("feedback");
+      const imagem = document.getElementById("question-image");
+      const backButton = document.getElementById("back-question-button");
+
+      feedback.textContent = "";
+      document.body.classList.remove("correct", "error");
+
+      if (numeroEtapa >= 1) {
+        backButton.classList.remove("hidden");
+      } else {
+        backButton.classList.add("hidden");
+      }
+
+      switch(numeroEtapa) {
+        case 0:
+          pergunta.textContent = "Uau! Que fruta grande! Qual é o nome dela?";
+          imagem.src = "imgs/melancia.png";
+          opcoes.innerHTML = `
+            <button class="option" onclick="responder('melancia')">
+              <img src="imgs/melancia.png" alt="Melancia">
+              <span>Melancia </span>
+            </button>
+            <button class="option" onclick="responder('abacaxi')">
+              <img src="imgs/abacaxi.png" alt="Abacaxi">
+              <span>Abacaxi </span>
+            </button>
+            <button class="option" onclick="responder('maca')">
+              <img src="imgs/maaça.png" alt="Maçã">
+              <span>Maçã </span>
+            </button>
+          `;
+          break;
+
+        case 1:
+          pergunta.textContent = "Muito bem! É uma melancia! Que cor ela tem por dentro?";
+          imagem.src = "imgs/melancia_aberta.png";
+          opcoes.innerHTML = `
+            <button class="option" onclick="responder('vermelha')">
+              <img src="imgs/cor_vemelho.png" alt="Vermelha">
+              <span>Vermelha </span>
+            </button>
+            <button class="option" onclick="responder('verde')">
+              <img src="imgs/cor_verde.jpg" alt="Verde">
+              <span>Verde </span>
+            </button>
+            <button class="option" onclick="responder('amarela')">
+              <img src="imgs/cor_amarelo.png" alt="Amarela">
+              <span>Amarela </span>
+            </button>
+          `;
+          break;
+
+        case 2:
+          pergunta.textContent = "Agora me diz: a melancia é maior ou menor que um limão?";
+          imagem.src = "imgs/melimao.png";
+          opcoes.innerHTML = `
+            <div class="opcoes-lado-a-lado">
+              <button class="option-sem-imagem" onclick="responder('maior')">
+                <span>Maior </span>
+              </button>
+              <button class="option-sem-imagem" onclick="responder('menor')">
+                <span>Menor </span>
+              </button>
+            </div>
+          `;
+          break;
+
+        case 3:
+          pergunta.textContent = "E você sabe com qual letra a palavra \"melancia\" começa e termina?";
+          imagem.src = "imgs/melancia.png";
+          opcoes.innerHTML = `
+            <div class="opcoes-coluna">
+              <button class="option-sem-imagem" onclick="responder('M e A')">
+                <span>Começa com M e termina com A</span>
+              </button>
+              <button class="option-sem-imagem" onclick="responder('M e O')">
+                <span>Começa com M e termina com O</span>
+              </button>
+              <button class="option-sem-imagem" onclick="responder('A e M')">
+                <span>Começa com A e termina com M</span>
+              </button>
+            </div>
+          `;
+          break;
+
+        case 4:
+          pergunta.textContent = "Muito bem! Quer me mostrar outra fruta?";
+          imagem.src = "imgs/melancia.png";
+          opcoes.innerHTML = `
+            <div class="opcoes-coluna">
+              <button class="option-sem-imagem" onclick="responder('outra_opção')">
+                <span>Muito bem! Vamos conhecer mais frutas! 🍉</span>
+              </button>
+              <button class="option-sem-imagem" onclick="responder('tela_principal')">
+                <span>Tudo bem! Até a próxima!</span>
+              </button>
+            </div>
+          `;
+          break;
+      }
+    }
+
+    function responder(resposta) {
+      historicoPerguntas.push(etapa);
+
+      const feedback = document.getElementById("feedback");
+      document.body.classList.remove("correct", "error");
+
+      if (etapa === 0) {
+        // CORREÇÃO: Removida a dualidade - apenas "melancia" está correta
+        if (resposta === "melancia") {
+          document.body.classList.add("correct");
+          feedback.textContent = "Correto! É uma melancia! ";
+          etapa++;
+          setTimeout(() => carregarPergunta(etapa), 2000);
+        } else {
+          document.body.classList.add("error");
+          feedback.textContent = "Tente novamente!";
+          historicoPerguntas.pop();
+        }
+      } else if (etapa === 1) {
+        if (resposta === "vermelha") {
+          document.body.classList.add("correct");
+          feedback.textContent = "Isso mesmo! Melancia é vermelha por dentro! ";
+          etapa++;
+          setTimeout(() => carregarPergunta(etapa), 2000);
+        } else {
+          document.body.classList.add("error");
+          feedback.textContent = "Não é essa cor!";
+          historicoPerguntas.pop();
+        }
+      } else if (etapa === 2) {
+        if (resposta === "maior") {
+          document.body.classList.add("correct");
+          feedback.textContent = "Exato! A melancia é maior que o limão! ";
+          etapa++;
+          setTimeout(() => carregarPergunta(etapa), 2000);
+        } else {
+          document.body.classList.add("error");
+          feedback.textContent = "Pense bem!";
+          historicoPerguntas.pop();
+        }
+      } else if (etapa === 3) {
+        if (resposta === "M e A") {
+          document.body.classList.add("correct");
+          feedback.textContent = "Perfeito! M de Melancia e A de delíciA!";
+          etapa++;
+          setTimeout(() => carregarPergunta(etapa), 2000);
+        } else {
+          document.body.classList.add("error");
+          feedback.textContent = "Tente novamente!";
+          historicoPerguntas.pop();
+        }
+      } else if (etapa === 4) {
+        // CORREÇÃO: Redirecionamentos atualizados
+        if (resposta === "outra_opção") {
+          feedback.textContent = "Ótimo! Vamos conhecer mais frutas!";
+          setTimeout(() => {
+            // Substitua pela URL da tela vazia
+            window.location.href = "outra_op.html";
+          }, 1500);
+        } else {
+          feedback.textContent = "Tudo bem! Até a próxima!";
+          setTimeout(() => {
+            // Substitua pela URL da tela principal
+            window.location.href = "Tela_Principal.html";
+          }, 1000);
+        }
+      }
+
+      setTimeout(() => {
+        document.body.classList.remove("correct", "error");
+      }, 2000);
+    }
+
+    carregarPergunta(etapa);
+  </script>
+</body>
+</html>
