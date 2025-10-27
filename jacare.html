@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz do Jacaré</title>
+<style>
+body {
+  background: #7d84e0;
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  transition: background-color 0.3s ease;
+}
+.correto { background-color: #58c472 !important; transition: background-color 0.3s ease; }
+.errado { background-color: #e65656 !important; transition: background-color 0.3s ease; }
+
+.quiz-container {
+  text-align: center;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+}
+h1 { color: #045db5; font-size: 1.6rem; margin-bottom: 20px; }
+
+.animal-image { display: flex; justify-content: center; align-items: center; margin: 15px 0; }
+.animal-image img { width: 150px; height: auto; border-radius: 12px; }
+
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+
+.option {
+  border: none; border-radius: 12px; padding: 15px; font-size: 1rem; font-weight: bold;
+  color: white; cursor: pointer; transition: 0.3s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 80px; position: relative;
+}
+.option:hover { transform: scale(1.05); }
+.option[data-resposta="Sim"] { background-color: #58c472 !important; }
+.option[data-resposta="Não"] { background-color: #e65656 !important; }
+.option[data-resposta="Maior"] { background-color: #8c6bdb !important; }
+.option[data-resposta="Menor"] { background-color: #fed330 !important; }
+.option[data-resposta="Verde"] { background-color: #58c472 !important; }
+
+.option-com-imagem { padding: 0 !important; background: transparent !important; border: 2px solid #ddd; overflow: hidden; }
+.option-image-full { width: 100%; height: 80px; object-fit: cover; border-radius: 10px; }
+.image-text-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  color: green; padding: 5px; font-size: 0.8rem; font-weight: bold; text-align: center;
+}
+.option-texto-somente { text-align: center; font-weight: bold; width: 100%; }
+
+#feedback { font-weight: bold; margin-top: 20px; font-size: 1.2rem; }
+
+.back-button {
+  background: #7d84e0; color: white; border: none; padding: 12px 24px;
+  border-radius: 30px; font-weight: bold; cursor: pointer;
+  margin-top: 15px; transition: 0.3s; width: 100%; max-width: 200px;
+}
+.back-button:hover { background: #6a71c9; transform: scale(1.05); }
+
+.extra-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+.extra-option {
+  background: #8c6bdb; color: white; border: none; border-radius: 12px;
+  padding: 12px; font-size: 0.9rem; cursor: pointer; transition: 0.3s;
+}
+.extra-option:hover { background: #7a5ac9; transform: scale(1.03); }
+
+.back-question-button {
+  position: absolute; top: 20px; left: 20px; background: #7d84e0; color: white;
+  border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.back-question-button:hover { transform: scale(1.1); }
+
+.hidden { display: none; }
+.disabled { pointer-events: none; opacity: 0.6; }
+</style>
+</head>
+<body>
+<div class="quiz-container">
+  <button class="back-question-button hidden" id="back-question-button" onclick="voltarPergunta()">←</button>
+  <h1 id="question">Carregando...</h1>
+  <div class="animal-image"><img id="animal-img" src="" alt="Animal"></div>
+  <div class="options" id="options-container"></div>
+
+  <div class="extra-options hidden" id="extra-options">
+    <button class="extra-option" onclick="irParaTelaInicial()">Ir para Tela Inicial</button>
+    <button class="extra-option" onclick="verOutroAnimal()">Quer ver outro animal?</button>
+  </div>
+
+  <p id="feedback"></p>
+  <button class="back-button hidden" id="back-button" onclick="irParaTelaInicial()">← Voltar para Tela Inicial</button>
+</div>
+
+<script>
+const perguntas = [
+  {
+    texto: "Oi! Vamos brincar de adivinhação?",
+    imagem: null,
+    opcoes: [{ texto: "Sim" }, { texto: "Não" }],
+    correta: "Sim",
+    primeiraPergunta: true,
+    aceitaQualquerResposta: true
+  },
+  {
+    texto: "Que animal é esse?",
+    imagem: "imgs/Jacare.png",
+    opcoes: [
+      { texto: "Jacaré", imagem: "imgs/JacarePerfil.png", cor: "imagem" },
+      { texto: "Tiranossauro", imagem: "imgs/t-rex.png", cor: "imagem" },
+      { texto: "Lagartixa", imagem: "imgs/Lagartixa.png", cor: "imagem" },
+      { texto: "Tartaruga", imagem: "imgs/Tartaruga.png", cor: "imagem" }
+    ],
+    correta: "Jacaré", verificarPalavraChave: true, palavrasChave: ["jacaré", "jacare"]
+  },
+  {
+    texto: "Muito bem! É um Jacaré! Ele é maior ou menor que uma formiga?",
+    imagem: "imgs/Jacamiga.png",
+    opcoes: [{ texto: "Maior" }, { texto: "Menor" }],
+    correta: "Maior", verificarPalavraChave: true, palavrasChave: ["maior", "grande"]
+  },
+  {
+    texto: "Isso mesmo! O jacaré é muito maior que uma formiga! Que cor ele tem?",
+    imagem: "imgs/Jacare.png",
+    opcoes: [
+      { texto: "Verde", imagem: "imgs/cor_verde.jpg", cor: "imagem" },
+      { texto: "Marrom", imagem: "imgs/cor_marrom.png", cor: "imagem" },
+      { texto: "Cinza", imagem: "imgs/cor_cinza.jpg", cor: "imagem" },
+      { texto: "Preto", imagem: "imgs/cor_preto.png", cor: "imagem" }
+    ],
+    correta: "Verde", verificarPalavraChave: true, palavrasChave: ["verde"]
+  },
+  {
+    texto: "Que legal! Eu adoro jacarés! Quer me mostrar outro animal?",
+    imagem: "imgs/Jacare.png",
+    opcoes: [{ texto: "Sim" }, { texto: "Não" }],
+    correta: "Sim",
+    respostaEspecial: true
+  }
+];
+
+let indice = 0;
+let tentativasNao = 0;
+
+const questionEl = document.getElementById("question");
+const imageEl = document.getElementById("animal-img");
+const optionsContainer = document.getElementById("options-container");
+const feedbackEl = document.getElementById("feedback");
+const extraOptions = document.getElementById("extra-options");
+const backButton = document.getElementById("back-button");
+const backQuestionButton = document.getElementById("back-question-button");
+
+function mudarFundo(cor) {
+  document.body.classList.add(cor);
+  document.querySelectorAll('.option').forEach(btn => btn.classList.add('disabled'));
+}
+
+function restaurarFundo() {
+  document.body.classList.remove('correto', 'errado');
+  document.querySelectorAll('.option').forEach(btn => btn.classList.remove('disabled'));
+}
+
+function verificarPalavraChave(resposta, palavrasChave) {
+  const minuscula = resposta.toLowerCase();
+  return palavrasChave.some(palavra => minuscula.includes(palavra.toLowerCase()));
+}
+
+function carregarPergunta() {
+  const atual = perguntas[indice];
+  questionEl.textContent = atual.texto;
+  feedbackEl.textContent = "";
+  restaurarFundo();
+
+  if (atual.imagem) { imageEl.src = atual.imagem; imageEl.style.display = "block"; }
+  else { imageEl.style.display = "none"; }
+
+  if (atual.primeiraPergunta) extraOptions.classList.remove("hidden");
+  else extraOptions.classList.add("hidden");
+
+  if (indice >= 1) backQuestionButton.classList.remove("hidden");
+  else backQuestionButton.classList.add("hidden");
+
+  backButton.classList.add("hidden");
+  optionsContainer.innerHTML = "";
+
+  atual.opcoes.forEach(opcao => {
+    const btn = document.createElement("button");
+    btn.classList.add("option");
+    btn.setAttribute("data-resposta", opcao.texto);
+    if (opcao.cor === "imagem") {
+      btn.classList.add("option-com-imagem");
+      const img = document.createElement("img");
+      img.src = opcao.imagem;
+      img.classList.add("option-image-full");
+      btn.appendChild(img);
+      const overlay = document.createElement("div");
+      overlay.classList.add("image-text-overlay");
+      overlay.textContent = opcao.texto;
+      btn.appendChild(overlay);
+    } else {
+      const span = document.createElement("span");
+      span.textContent = opcao.texto;
+      span.classList.add("option-texto-somente");
+      btn.appendChild(span);
+    }
+    btn.onclick = () => verificarResposta(opcao.texto);
+    optionsContainer.appendChild(btn);
+  });
+}
+
+function voltarPergunta() {
+  if (indice > 0) { indice--; carregarPergunta(); }
+}
+
+function verificarResposta(selecionada) {
+  const atual = perguntas[indice];
+
+  if (indice === 0 && selecionada === "Não") {
+    tentativasNao++;
+    if (tentativasNao === 1) {
+      feedbackEl.textContent = "Tudo bem! Vou te dar outra chance...";
+      optionsContainer.innerHTML = "";
+      setTimeout(() => { feedbackEl.textContent = ""; carregarPergunta(); }, 3000);
+    } else {
+      feedbackEl.textContent = "Sem problemas! Podemos brincar outra hora.";
+      optionsContainer.innerHTML = "";
+      extraOptions.classList.add("hidden");
+      backButton.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (indice === 0 && atual.aceitaQualquerResposta) {
+    mudarFundo('correto');
+    feedbackEl.textContent = "Ótimo! Vamos começar!";
+    setTimeout(() => { indice++; carregarPergunta(); }, 2000);
+    return;
+  }
+
+  if (atual.verificarPalavraChave) {
+    const correto = verificarPalavraChave(selecionada, atual.palavrasChave);
+    if (!correto) {
+      mudarFundo('errado');
+      feedbackEl.textContent = "Tente novamente!";
+      setTimeout(() => { restaurarFundo(); feedbackEl.textContent = ""; }, 2000);
+      return;
+    }
+    mudarFundo('correto');
+    feedbackEl.textContent = "Muito bem!";
+  }
+
+  if (atual.respostaEspecial) {
+    if (selecionada === "Não") {
+      window.location.href = "in_Tela_Principal.html";
+      return;
+    } else if (selecionada === "Sim") {
+      mudarFundo('correto');
+      feedbackEl.textContent = "Que legal! Vamos ver outro animal...";
+      setTimeout(() => { window.location.href = "in_outra_op.html"; }, 3000);
+      return;
+    }
+  }
+
+  setTimeout(() => {
+    indice++;
+    if (indice < perguntas.length) carregarPergunta();
+    else {
+      questionEl.textContent = "Fim do jogo!";
+      imageEl.style.display = "none";
+      optionsContainer.innerHTML = "";
+      feedbackEl.textContent = "Você mandou muito bem!";
+      backButton.classList.remove("hidden");
+      backQuestionButton.classList.add("hidden");
+    }
+  }, 2000);
+}
+
+function irParaTelaInicial() {
+  window.location.href = "in_Tela_Principal.html";
+}
+function verOutroAnimal() {
+  window.location.href = "in_outra_op.html";
+}
+
+carregarPergunta();
+</script>
+</body>
+</html>
